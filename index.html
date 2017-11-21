@@ -1,0 +1,160 @@
+  <!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Player Map</title>
+    <!-- Include Leaflet 1.2.0 Library -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.2.0/dist/leaflet.js"></script>
+    <!-- Include CARTO.js Library -->
+    <script src="https://cdn.rawgit.com/CartoDB/cartodb.js/@4.0.0-alpha.test2/carto.js"></script>
+    
+    <style>
+      * { margin:0; padding:0; }
+      html { box-sizing:border-box; height:100%; }
+      body { background:#f2f6f9; height:100%; font-family:"Open sans", Helvetica, Arial, sans-serif; }
+      #container { display:flex; width:100%; height:100%; }
+      #map { flex:1; margin:10px; }
+      #widgets { width:300px; margin:10px 10px 10px 0; }
+      .widget { background:white; padding:10px; margin-bottom:10px; }
+      .widget h1 { font-size:1.2em; }
+      .widget-formula .result { font-size:2em; }
+    </style>
+
+    <body>
+      <H1>Baseball Player Map</H1>
+      <p>This is a map of where all the player in MLB history were  born.</p>
+
+
+      <div id="container">
+      <div id="map"></div>
+        <div id="widgets">
+        <div id="TotalPlayersWidget" class="widget widget-formula"
+          <h1>Player Count</h1>
+            <p><span class="js-TotalPlayers result">xxx</span> players</p>
+        </div>
+      </div>
+      </div>
+
+
+    <script>
+      // 1. Setting up the Leaflet Map
+      // 1.1 Creating the Leaflet Map
+      var map = L.map('map').setView([38.0000, -97.0000], 4);
+
+      // 1.2 Adding basemap and labels layers
+      // Adding Voyager Basemap
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+        attribution: '&copy;<a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy;<a href="https://carto.com/attribution">CARTO</a>'
+      }).addTo(map);
+
+      // Adding Voyager Labels
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+        attribution: '&copy;<a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy;<a href="https://carto.com/attribution">CARTO</a>',
+        zIndex: 100
+      }).addTo(map);
+
+      // 2 Defining a carto.Client
+      var client = new carto.Client({
+        apiKey: 'bda650774b659138fb1623d04b72d79ac6944057',
+        username: 'kreilly-carto'
+      });
+
+      // 3 Defining Layers
+      // 3.1 Defining World Borders layer
+
+      var WorldBorderDataset = new carto.source.Dataset('world_borders');
+      var WorldBorderStyle = new carto.style.CartoCSS(`
+        #layer {
+          polygon-fill: #162945;
+          polygon-opacity: 0.5;
+          ::outline {
+            line-color: #FFFFFF;
+            line-width: 1;
+            line-opacity: 0.5;
+          }
+        }`);
+
+      var WorldBorder = new carto.layer.Layer(WorldBorderDataset, WorldBorderStyle);
+
+      // 3.1. Defining Player Data layer
+
+      var MLBplayersData = new carto.source.Dataset('mlb_players');
+      var MLBPlayerStyle = new carto.style.CartoCSS(`
+        #layer {
+          marker-width: 7;
+         marker-fill: #FF583E;
+         marker-fill-opacity: 0.9;
+         marker-line-color: #FFFFFF;
+         marker-line-width: 0.5;
+         marker-line-opacity: 1;
+         marker-type: ellipse;
+         marker-allow-overlap: false;
+       }`);
+      
+      var MLBplayers = new carto.layer.Layer(MLBplayersData, MLBPlayerStyle);
+      
+      // 4.0 Displaying Layers on Map
+
+      client.addLayers([ WorldBorder, MLBplayers ]);
+      
+      client.getLeafletLayer().addTo(map);
+
+      // 5.0 Adding Dataviews to the Map
+      // 5.1 Defining a formula dataview
+      var TotalPlayers = new carto.dataview.Formula(MLBplayersData, 'birthyear', {operation: carto.operation.COUNT
+      });
+
+      // 5.2 Listening to data changes on the dataviews
+      TotalPlayers.on('dataChanged', function (newData) {
+        refreshTotalPlayersWidget(newData.result);
+      });
+
+      var refreshTotalPlayersWidget = function (TotalPlayers) {
+        var $widget = document.querySelector('#TotalPlayersWidget');
+        var $TotalPlayers = $widget.querySelector('.js-TotalPlayers');
+        $TotalPlayers.innerText = Math.floor(TotalPlayers);
+      };
+
+      // 5.3 Adding the dataviews to the client
+      client.addDataview(TotalPlayers);
+
+      // 6.0 Adding Popup Infowindows
+      MLBplayers.setFeatureClickColumns(['namelast', 'namefirst', 'birthyear'])
+
+      var popup = L.popup();
+      MLBplayers.on(carto.layer.events.FEATURE_CLICKED, function (featureEvent) {
+        popup.setContent(`
+            <h2> ${featureEvent.data.namelast}, ${featureEvent.data.namefirst} </h2>
+            <p> </p>
+            <p> Born ${featureEvent.data.birthyear}</p>
+            `)
+        .setLatLng(featureEvent.latLng)
+        .openOn(map);
+      });
+
+
+
+/*      var selectedField;
+
+      layer.on(carto.layer.events.FEATURE_OVER, function(featureEvents) {
+        if(featureEvent.data['namelast']){
+          popup.setContent(`
+            <h2> ${featureEvent.data.namelast} </h2>
+            <p>Foo bar</p>
+            `)
+          .setLatLng(featureEvent.latlng)
+          .openOn(map);
+        }
+      });
+*//*
+      layer.of(carto.layer.events.FEATURE_OUT, (featureEvent) {
+        popup.removeFrom(map);
+      })
+*/
+
+    </script>
+  </body>
+</html>
