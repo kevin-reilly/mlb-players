@@ -123,16 +123,13 @@
       // 5.3 Adding the dataviews to the client
       client.addDataview(TotalPlayers);
 
-<<<<<<< HEAD
+
 /*      // 6.0 Adding bounding box filter
       var boundBoxFilter = new.carto.filter.BoundingBoxLeaflet(map)
 
       var applyBoundingBox = TotalPlayers.addFilter(boundBoxFilter) */
 
       // 7.0 Adding Popup Infowindows
-=======
-      // 6.0 Adding Popup Infowindows
->>>>>>> 35e82f505d5a8dc4317781598988367938058327
       MLBplayers.setFeatureClickColumns(['namelast', 'namefirst', 'birthyear'])
 
       var popup = L.popup();
@@ -145,26 +142,6 @@
         .setLatLng(featureEvent.latLng)
         .openOn(map);
       });
-
-
-
-/*      var selectedField;
-
-      layer.on(carto.layer.events.FEATURE_OVER, function(featureEvents) {
-        if(featureEvent.data['namelast']){
-          popup.setContent(`
-            <h2> ${featureEvent.data.namelast} </h2>
-            <p>Foo bar</p>
-            `)
-          .setLatLng(featureEvent.latlng)
-          .openOn(map);
-        }
-      });
-*//*
-      layer.of(carto.layer.events.FEATURE_OUT, (featureEvent) {
-        popup.removeFrom(map);
-      })
-*/
 
     </script>
   </body>
