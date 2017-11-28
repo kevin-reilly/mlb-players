@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.2.0/dist/leaflet.js"></script>
     <!-- Include CARTO.js Library -->
-    <script src="https://cdn.rawgit.com/CartoDB/cartodb.js/@4.0.0-alpha.test2/carto.js"></script>
+    <script src="https://cdn.rawgit.com/CartoDB/cartodb.js/@4.0.0-alpha/carto.js"></script>
     
     <style>
       * { margin:0; padding:0; }
@@ -123,10 +123,10 @@
       // 5.3 Adding the dataviews to the client
       client.addDataview(TotalPlayers);
 
-      // 6.0 Adding bounding box filter
+/*      // 6.0 Adding bounding box filter
       var boundBoxFilter = new.carto.filter.BoundingBoxLeaflet(map)
 
-      var applyBoundingBox = TotalPlayers.addFilter(boundBoxFilter)
+      var applyBoundingBox = TotalPlayers.addFilter(boundBoxFilter) */
 
       // 7.0 Adding Popup Infowindows
       MLBplayers.setFeatureClickColumns(['namelast', 'namefirst', 'birthyear'])
